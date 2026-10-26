@@ -1,0 +1,25 @@
+const express=require('express');const cors=require('cors');const axios=require('axios');
+const app=express();app.use(cors());app.use(express.json());app.use(express.static('.'));
+const TILL="5259614";
+const CONSUMER_KEY=process.env.CONSUMER_KEY;
+const CONSUMER_SECRET=process.env.CONSUMER_SECRET;
+const PASSKEY=process.env.PASSKEY;
+async function getToken(){
+ const auth=Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
+ const r=await axios.get('https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',{headers:{Authorization:`Basic ${auth}`}});
+ return r.data.access_token;
+}
+app.post('/stk',async(req,res)=>{
+ try{
+  const {phone,amount}=req.body;
+  const token=await getToken();
+  const d=new Date();const ts=d.getFullYear()+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2)+("0"+d.getHours()).slice(-2)+("0"+d.getMinutes()).slice(-2)+("0"+d.getSeconds()).slice(-2);
+  const pwd=Buffer.from(TILL+PASSKEY+ts).toString('base64');
+  const r=await axios.post('https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest',{
+   BusinessShortCode:TILL,Password:pwd,Timestamp:ts,TransactionType:"CustomerBuyGoodsOnline",Amount:amount,PartyA:phone,PartyB:TILL,PhoneNumber:phone,CallBackURL:`https://${req.get('host')}/callback`,AccountReference:"AviatorFly",TransactionDesc:"Deposit"
+  },{headers:{Authorization:`Bearer ${token}`}});
+  res.json(r.data);
+ }catch(e){res.status(200).json({error:e.response?.data||e.message});}
+});
+app.get('/callback',(req,res)=>res.send('OK'));
+app.listen(10000,()=>console.log('running'));
