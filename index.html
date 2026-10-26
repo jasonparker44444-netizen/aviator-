@@ -32,15 +32,68 @@ body{background:#0f1420;color:#fff;font-family:Arial;display:flex;flex-direction
 <button class="deposit-btn" onclick="deposit()">DEPOSIT - STK (Till 8033859)</button>
 <div class="status" id="status"></div>
 </div>
+</div>
 <script>
-const RENDER_BACKEND = "https://aviator-quoe.onrender.com
-let balance=parseFloat(localStorage.getItem('avi_bal')||'0');let bet=0;let isFlying=false;let curMult=1;let crashAt=0;let interval=null;
-function updateBal(){document.getElementById('balance').innerText='Balance: KES '+balance.toFixed(2);localStorage.setItem('avi_bal',balance);}updateBal();
-function placeBet(){let amt=parseFloat(document.getElementById('betAmount').value);if(amt>balance){document.getElementById('status').innerHTML='No balance - Deposit';return;}if(isFlying)return;bet=amt;balance-=amt;updateBal();isFlying=true;curMult=1;crashAt=Math.random()*9+1.1;document.getElementById('betBtn').innerText='CASHOUT';document.getElementById('betBtn').onclick=cashout;interval=setInterval(()=>{curMult+=0.05+curMult*0.01;document.getElementById('multiplier').innerText=curMult.toFixed(2)+'x';if(curMult>=crashAt)crash();},100);}
-function cashout(){if(!isFlying)return;clearInterval(interval);let win=bet*curMult;balance+=win;updateBal();document.getElementById('status').innerHTML='WON '+win.toFixed(2);resetGame();}
-function crash(){clearInterval(interval);document.getElementById('status').innerHTML='CRASHED @ '+crashAt.toFixed(2)+'x';resetGame();}
-function resetGame(){isFlying=false;document.getElementById('betBtn').innerText='BET';document.getElementById('betBtn').onclick=placeBet;}
-async function deposit(){const phone=document.getElementById('phone').value.trim();const amount=document.getElementById('depAmount').value.trim();const s=document.getElementById('status');s.innerHTML='Sending STK to Till 5259614...';let urls=[RENDER_BACKEND+'/stk','/stk.php','stk.php'];for(let url of urls){try{let res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,amount})});let data=await res.json();if(data.ResponseCode=='0'){s.innerHTML='STK Sent! Check phone';setTimeout(()=>{balance+=parseFloat(amount);updateBal();},4000);return;} }catch(e){continue;}}s.innerHTML='TOKEN FAILED - Deploy Render backend first';}
+const RENDER_BACKEND = "https://aviator-quoe.onrender.com";
+let balance = parseFloat(localStorage.getItem('avi_bal') || '0');
+let bet = 0; let isFlying = false; let curMult = 1; let crashAt = 0; let interval;
+
+function updateBal(){
+ document.getElementById('balance').innerText='Balance: KES '+balance.toFixed(2);
+ localStorage.setItem('avi_bal', balance);
+}
+updateBal();
+
+function placeBet(){
+ let amt=parseFloat(document.getElementById('betAmount').value);
+ if(amt>balance){document.getElementById('status').innerText='Low balance! Deposit'; return;}
+ if(isFlying)return;
+ bet=amt; balance-=bet; updateBal();
+ isFlying=true; curMult=1; crashAt=(Math.random()*4+1.1);
+ document.getElementById('status').innerText='Flying...';
+ interval=setInterval(()=>{
+   curMult+=0.02; document.getElementById('multiplier').innerText=curMult.toFixed(2)+'x';
+   if(curMult>=crashAt){crash();}
+ },100);
+}
+function cashout(){
+ if(!isFlying)return;
+ clearInterval(interval);
+ let win=bet*curMult; balance+=win; updateBal();
+ document.getElementById('status').innerText='WON KES '+win.toFixed(2)+' @ '+curMult.toFixed(2)+'x';
+ resetGame();
+}
+function crash(){
+ clearInterval(interval);
+ document.getElementById('status').innerText='CRASHED @ '+crashAt.toFixed(2)+'x';
+ resetGame();
+}
+function resetGame(){
+ isFlying=false;
+ document.getElementById('betBtn').innerText='BET';
+ document.getElementById('betBtn').onclick=placeBet;
+ document.getElementById('multiplier').innerText='1.00x';
+}
+async function deposit(){
+ const phone=document.getElementById('phone').value.trim();
+ const amount=document.getElementById('depAmount').value.trim();
+ if(!phone.startsWith('254')||phone.length!=12){alert('Use 2547XXXXXXXX'); return;}
+ document.getElementById('status').innerText='Sending STK to '+phone+'...';
+ try{
+   const res=await fetch(RENDER_BACKEND+'/stk', {
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({phone:phone, amount:amount})
+   });
+   const data=await res.json();
+   document.getElementById('status').innerText=data.message || 'STK Sent! Check phone';
+   if(data.success){
+     setTimeout(()=>{ balance+=parseFloat(amount); updateBal(); document.getElementById('status').innerText='Deposit confirmed!'; }, 3000);
+   }
+ }catch(e){
+   document.getElementById('status').innerText='Error: '+e.message;
+ }
+}
 </script>
 </body>
 </html>
