@@ -3,96 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AVIATOR FLY ✈️</title>
+<title>AVIATOR FLY</title>
 <style>
 body{background:#0f1420;color:#fff;font-family:Arial;display:flex;flex-direction:column;align-items:center;padding:10px}
-.header,.balance,.controls{width:100%;max-width:600px;border-radius:10px;padding:12px;margin-bottom:8px}
-.header{background:#1a2333;text-align:center;font-weight:bold;font-size:18px}
+.header,.balance,.controls{width:100%;max-width:400px;border-radius:12px;padding:12px;margin-bottom:8px}
+.header{background:#23333;text-align:center;font-weight:bold;font-size:18px}
 .balance{background:#00c853;text-align:center;font-weight:bold}
 .controls{background:#1e2a3d;padding:15px;border-radius:12px}
 .plane{font-size:50px;text-align:center;animation:float 1.5s infinite alternate}
 @keyframes float{from{transform:translateY(0)}to{transform:translateY(-10px)}}
-.mult{font-size:48px;color:#ffeb3b;text-align:center;font-weight:bold}
+.mult{font-size:40px;color:#febb2b;text-align:center;font-weight:bold}
 .input{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:none;font-size:16px}
-.bet-btn{width:100%;padding:14px;background:#00e676;font-weight:bold;border:none;border-radius:8px;font-size:18px}
-.deposit-btn{width:100%;padding:14px;background:#ffeb3b;font-weight:bold;border:none;border-radius:8px;margin-top:6px}
+.bet-btn{width:100%;padding:14px;background:#00c676;font-weight:bold;border:none;border-radius:8px;font-size:18px}
+.deposit-btn{width:100%;padding:14px;background:#febb2b;font-weight:bold;border:none;border-radius:8px;margin-top:6px}
 .status{text-align:center;margin-top:10px;font-weight:bold}
 </style>
 </head>
 <body>
-<div class="header">AVIATOR FLY ✈️</div>
+<div class="header">AVIATOR FLY</div>
 <div class="balance" id="balance">Balance: KES 0.00</div>
 <div class="controls">
 <div class="plane">✈️</div>
-<div class="mult" id="multiplier">1.00x</div>
+<div class="mult" id="mult">1.00x</div>
 <input id="betAmount" class="input" type="number" value="50">
-<button class="bet-btn" id="betBtn" onclick="placeBet()">BET</button>
+<button class="bet-btn" id="betBtn">BET</button>
 <input id="phone" class="input" type="text" value="2547" placeholder="2547XXXXXXXX">
 <input id="depAmount" class="input" type="number" value="100">
 <button class="deposit-btn" onclick="deposit()">DEPOSIT - STK (Till 8033859)</button>
 <div class="status" id="status"></div>
 </div>
-</div>
+
 <script>
-const RENDER_BACKEND = "https://aviator-quoe.onrender.com";
-let balance = parseFloat(localStorage.getItem('avi_bal') || '0');
-let bet = 0; let isFlying = false; let curMult = 1; let crashAt = 0; let interval;
-
-function updateBal(){
- document.getElementById('balance').innerText='Balance: KES '+balance.toFixed(2);
- localStorage.setItem('avi_bal', balance);
-}
-updateBal();
-
-function placeBet(){
- let amt=parseFloat(document.getElementById('betAmount').value);
- if(amt>balance){document.getElementById('status').innerText='Low balance! Deposit'; return;}
- if(isFlying)return;
- bet=amt; balance-=bet; updateBal();
- isFlying=true; curMult=1; crashAt=(Math.random()*4+1.1);
- document.getElementById('status').innerText='Flying...';
- interval=setInterval(()=>{
-   curMult+=0.02; document.getElementById('multiplier').innerText=curMult.toFixed(2)+'x';
-   if(curMult>=crashAt){crash();}
- },100);
-}
-function cashout(){
- if(!isFlying)return;
- clearInterval(interval);
- let win=bet*curMult; balance+=win; updateBal();
- document.getElementById('status').innerText='WON KES '+win.toFixed(2)+' @ '+curMult.toFixed(2)+'x';
- resetGame();
-}
-function crash(){
- clearInterval(interval);
- document.getElementById('status').innerText='CRASHED @ '+crashAt.toFixed(2)+'x';
- resetGame();
-}
-function resetGame(){
- isFlying=false;
- document.getElementById('betBtn').innerText='BET';
- document.getElementById('betBtn').onclick=placeBet;
- document.getElementById('multiplier').innerText='1.00x';
-}
 async function deposit(){
- const phone=document.getElementById('phone').value.trim();
- const amount=document.getElementById('depAmount').value.trim();
- if(!phone.startsWith('254')||phone.length!=12){alert('Use 2547XXXXXXXX'); return;}
- document.getElementById('status').innerText='Sending STK to '+phone+'...';
- try{
-   const res=await fetch(RENDER_BACKEND+'/stk', {
-     method:'POST',
-     headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({phone:phone, amount:amount})
-   });
-   const data=await res.json();
-   document.getElementById('status').innerText=data.message || 'STK Sent! Check phone';
-   if(data.success){
-     setTimeout(()=>{ balance+=parseFloat(amount); updateBal(); document.getElementById('status').innerText='Deposit confirmed!'; }, 3000);
-   }
- }catch(e){
-   document.getElementById('status').innerText='Error: '+e.message;
- }
+  const phone = document.getElementById('phone').value.trim();
+  const amount = document.getElementById('depAmount').value.trim();
+  const status = document.getElementById('status');
+  
+  if(!phone.startsWith('254') || phone.length < 12){
+    status.innerText = 'Error: Use 2547XXXXXXXX';
+    return;
+  }
+  
+  status.innerText = 'Sending STK to ' + phone + '...';
+  status.style.color = '#febb2b';
+  
+  try{
+    const res = await fetch('/stk-push', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({phone: phone, amount: Number(amount)})
+    });
+    
+    const text = await res.text();
+    console.log('RAW:', text);
+    
+    let data;
+    try{
+      data = JSON.parse(text);
+    }catch(e){
+      status.innerText = 'Server Error: ' + text.substring(0,100);
+      console.error(text);
+      return;
+    }
+    
+    if(data.success){
+      status.innerText = data.message;
+      status.style.color = '#00ff00';
+      alert('STK Sent! Check phone ' + phone);
+    } else {
+      status.innerText = data.message;
+      status.style.color = '#ff4444';
+    }
+  }catch(err){
+    status.innerText = 'Error: ' + err.message;
+    console.error(err);
+  }
 }
 </script>
 </body>
