@@ -1,119 +1,99 @@
-require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-
+const path = require('path');
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(__dirname));
 
-// --- MPESA CONFIG FROM RENDER ENV ---
-const CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY?.trim();
-const CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET?.trim();
-const PASSKEY = process.env.MPESA_PASSKEY?.trim();
-const SHORTCODE = process.env.MPESA_SHORTCODE?.trim(); // 8033859
-const CALLBACK_URL = process.env.CALLBACK_URL?.trim(); // https://aviator-1-k3kc.onrender.com/callback
-const ENV = (process.env.MPESA_ENV || 'production').trim();
+let balances = {};
 
-console.log('ENV:', ENV, 'SHORTCODE:', SHORTCODE, 'CALLBACK:', CALLBACK_URL);
-
-// --- 1. GET TOKEN ---
-async function getToken() {
-    const url = ENV === 'production' 
-        ? 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
-        : 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
-    
-    const auth = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
-    
-    try {
-        const res = await axios.get(url, {
-            headers: { Authorization: `Basic ${auth}` }
-        });
-        console.log('TOKEN: 200 - Success');
-        return res.data.access_token;
-    } catch (e) {
-        console.log('TOKEN FAIL:', e.response?.data || e.message);
-        throw new Error('Token failed');
-    }
+function getTimestamp() {
+  const d = new Date();
+  const pad = (n) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 
-// --- 2. STK PUSH ---
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.post('/api/mpesa/stkpush', async (req, res) => {
-    let { phone, amount } = req.body;
-    if (!phone || !amount) return res.status(400).json({ error: 'Phone and Amount required' });
+  try {
+    const { phone, amount } = req.body;
+    let phoneFormatted = phone.toString().trim();
+    if (phoneFormatted.startsWith('0')) phoneFormatted = '254' + phoneFormatted.slice(1);
+    if (phoneFormatted.startsWith('+')) phoneFormatted = phoneFormatted.slice(1);
+    
+    const consumerKey = (process.env.MPESA_CONSUMER_KEY || '').trim();
+    const consumerSecret = (process.env.MPESA_CONSUMER_SECRET || '').trim();
+    const passkey = (process.env.MPESA_PASSKEY || '').trim();
+    const shortcode = (process.env.MPESA_SHORTCODE || '').trim();
+    const env = (process.env.MPESA_ENV || 'production').trim();
 
-    // Format phone to 2547...
-    phone = phone.toString().replace(/\D/g, '');
-    if (phone.startsWith('0')) phone = '254' + phone.slice(1);
-    if (phone.startsWith('7')) phone = '254' + phone;
+    const tokenUrl = env === 'production' 
+      ? 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+      : 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
 
-    amount = Math.round(amount);
+    const stkUrl = env === 'production'
+      ? 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+      : 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
 
-    try {
-        const token = await getToken();
-        const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14);
-        const password = Buffer.from(`${SHORTCODE}${PASSKEY}${timestamp}`).toString('base64');
+    console.log(`ENV: ${env} SHORTCODE: ${shortcode} PHONE: ${phoneFormatted} AMOUNT: ${amount}`);
 
-        const stkUrl = ENV === 'production'
-            ? 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
-            : 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
+    const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
+    const tokenRes = await axios.get(tokenUrl, { headers: { Authorization: `Basic ${auth}` } });
+    const token = tokenRes.data.access_token;
+    console.log('TOKEN: 200 OK');
 
-        const payload = {
-            BusinessShortCode: SHORTCODE,
-            Password: password,
-            Timestamp: timestamp,
-            TransactionType: 'CustomerBuyGoodsOnline', // For Till 8033859 - THIS IS IMPORTANT
-            Amount: amount,
-            PartyA: phone,
-            PartyB: SHORTCODE,
-            PhoneNumber: phone,
-            CallBackURL: CALLBACK_URL,
-            AccountReference: 'Aviator',
-            TransactionDesc: 'Deposit'
-        };
+    const timestamp = getTimestamp();
+    const password = Buffer.from(shortcode + passkey + timestamp).toString('base64');
 
-        console.log('STK REQUEST:', { phone, amount, PartyB: SHORTCODE });
+    const stkRes = await axios.post(stkUrl, {
+      BusinessShortCode: shortcode,
+      Password: password,
+      Timestamp: timestamp,
+      TransactionType: "CustomerPayBillOnline",
+      Amount: Math.round(amount),
+      PartyA: phoneFormatted,
+      PartyB: shortcode,
+      PhoneNumber: phoneFormatted,
+      CallBackURL: process.env.CALLBACK_URL,
+      AccountReference: "Aviator",
+      TransactionDesc: "Deposit"
+    }, { headers: { Authorization: `Bearer ${token}` } });
 
-        const stkRes = await axios.post(stkUrl, payload, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-
-        console.log('STK SENT:', stkRes.data);
-        res.json(stkRes.data);
-
-    } catch (err) {
-        console.error('STK ERROR:', err.response?.data || err.message);
-        res.status(500).json(err.response?.data || { error: 'STK Failed' });
-    }
+    console.log('STK SENT:', stkRes.data);
+    res.json(stkRes.data);
+  } catch (e) {
+    console.error('STK ERROR:', e.response?.data || e.message);
+    res.status(500).json({ error: 'TOKEN FAIL', details: e.response?.data || e.message });
+  }
 });
 
-// Alias for your frontend if it uses /deposit
-app.post('/api/deposit', (req, res) => {
-    req.url = '/api/mpesa/stkpush';
-    app.handle(req, res);
-});
-
-// --- 3. CALLBACK ---
 app.post('/callback', (req, res) => {
-    console.log('=== CALLBACK RECEIVED ===');
-    console.log(JSON.stringify(req.body, null, 2));
-
-    const stkCallback = req.body.Body?.stkCallback;
-    if (stkCallback) {
-        if (stkCallback.ResultCode === 0) {
-            console.log('PAYMENT SUCCESS');
-            // TODO: Add balance to user here
-            // const amount = stkCallback.CallbackMetadata.Item.find(i => i.Name === 'Amount').Value
-            // const phone = stkCallback.CallbackMetadata.Item.find(i => i.Name === 'PhoneNumber').Value
-        } else {
-            console.log('PAYMENT FAILED:', stkCallback.ResultDesc);
-        }
+  console.log('CALLBACK:', JSON.stringify(req.body));
+  try {
+    const body = req.body;
+    const stk = body.Body?.stkCallback;
+    if (stk?.ResultCode === 0) {
+      const meta = stk.CallbackMetadata?.Item;
+      const amount = meta?.find(i => i.Name === 'Amount')?.Value;
+      const phone = meta?.find(i => i.Name === 'PhoneNumber')?.Value;
+      if (phone && amount) {
+        balances[phone] = (balances[phone] || 0) + amount;
+        console.log(`BALANCE UPDATED ${phone}: ${balances[phone]}`);
+      }
     }
-    res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+  } catch (err) {}
+  res.json({ ResultCode: 0, ResultDesc: "Accepted" });
 });
 
-app.get('/', (req, res) => res.send('Aviator MPESA Live - Production'));
+app.get('/api/balance/:phone', (req, res) => {
+  res.json({ balance: balances[req.params.phone] || 0 });
+});
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on ${PORT} - MPESA Live Production`));
