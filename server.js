@@ -7,8 +7,6 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// FIXED: Your index.html is in root, not in /public
 app.use(express.static(__dirname));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -20,7 +18,7 @@ async function getToken() {
   const key = (process.env.MPESA_CONSUMER_KEY || '').trim();
   const secret = (process.env.MPESA_CONSUMER_SECRET || '').trim();
   const env = (process.env.MPESA_ENV || 'production').trim();
-  const baseUrl = env === 'production' ? 'https://api.safaricom.co.ke'
+  const baseUrl = env === 'production' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke';
   const url = `${baseUrl}/oauth/v1/generate?grant_type=client_credentials`;
   const auth = Buffer.from(`${key}:${secret}`).toString('base64');
   const res = await axios.get(url, { headers: { Authorization: `Basic ${auth}` } });
@@ -33,7 +31,6 @@ app.post('/api/deposit', async (req, res) => {
     phone = phone.toString().trim();
     if (phone.startsWith('0')) phone = '254' + phone.substring(1);
     if (phone.startsWith('+')) phone = phone.substring(1);
-
     const token = await getToken();
     const shortcode = (process.env.MPESA_SHORTCODE || '8033859').trim();
     const passkey = (process.env.MPESA_PASSKEY || '').trim();
@@ -41,7 +38,6 @@ app.post('/api/deposit', async (req, res) => {
     const baseUrl = env === 'production' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke';
     const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
     const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64');
-
     const stkData = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -55,12 +51,7 @@ app.post('/api/deposit', async (req, res) => {
       AccountReference: 'Till5259614',
       TransactionDesc: 'Aviator Deposit'
     };
-
-    const stkRes = await axios.post(
-      `${baseUrl}/mpesa/stkpush/v1/processrequest`,
-      stkData,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const stkRes = await axios.post(`${baseUrl}/mpesa/stkpush/v1/processrequest`, stkData, { headers: { Authorization: `Bearer ${token}` } });
     res.json(stkRes.data);
   } catch (err) {
     res.status(400).json({ error: err.response?.data || err.message });
