@@ -1,37 +1,23 @@
-// server.js - FIXED FOR ABC BANK CHANNEL 14591
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
-
 const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve static files if you have frontend
 app.use(express.static(path.join(__dirname, 'public')));
-
 const PAYHERO_TOKEN = process.env.PAYHERO_BASIC_TOKEN; // Put "Basic VjJ..." in Render ENV
 const PAYHERO_URL = "https://backend.payhero.co.ke/api/v2/payments";
 const CALLBACK_URL = "https://digitalservices-bwnx.onrender.com/api/callback";
-
-// Simple in-memory DB - Replace with real DB later
 const TRANSACTIONS = {};
-
-// HOME
 app.get('/', (req, res) => {
   res.json({ status: "LIVE", message: "Digital Services API - Fixed for ABC Bank ✅" });
 });
-
-// 1. INITIATE PAYMENT - FIXED ACCOUNT NUMBER
 app.post('/api/pay', async (req, res) => {
   try {
     let { phone, amount, gameId } = req.body;
-    
-    if (!phone) return res.status(400).json({ success: false, message: "Phone required" });
-    
-    // Format phone: 011... -> 25411...
+      if (!phone) return res.status(400).json({ success: false, message: "Phone required" });
     let formattedPhone = phone.toString().replace(/\s/g, '');
     if (formattedPhone.startsWith('0')) {
       formattedPhone = '254' + formattedPhone.slice(1);
@@ -42,9 +28,7 @@ app.post('/api/pay', async (req, res) => {
 
     const finalAmount = Number(amount) || 10;
     const externalRef = `DIGITAL_${Date.now()}_${Math.floor(Math.random()*1000)}`;
-
-    // THIS IS THE FIX FOR YOUR SCREENSHOT ERROR
-    const payload = {
+ const payload = {
       amount: finalAmount,
       phone_number: formattedPhone,
       channel_id: 14591,
@@ -55,8 +39,7 @@ app.post('/api/pay', async (req, res) => {
       customer_name: "Gamer",
       customer_email: "player@digitalservices.co.ke"
     };
-
-    console.log("PAY REQUEST:", payload);
+  console.log("PAY REQUEST:", payload);
 
     const response = await axios.post(PAYHERO_URL, payload, {
       headers: {
@@ -91,8 +74,6 @@ app.post('/api/pay', async (req, res) => {
     return res.status(500).json({ success: false, error: errData });
   }
 });
-
-// 2. CALLBACK - PAYHERO WILL CALL THIS
 app.post('/api/callback', (req, res) => {
   console.log("========== CALLBACK ==========");
   console.log(JSON.stringify(req.body, null, 2));
@@ -140,23 +121,16 @@ app.post('/api/callback', (req, res) => {
   } catch (e) {
     console.error("Callback processing error:", e.message);
   }
-
-  // MUST return success to PayHero
   res.json({ ResultCode: 0, ResultDesc: "Callback received successfully" });
 });
-
-// 3. CHECK STATUS - FRONTEND POLLS THIS TO START GAME
 app.get('/api/check-status/:ref', (req, res) => {
   const data = TRANSACTIONS[req.params.ref];
   if (!data) return res.json({ status: "NOT_FOUND" });
   res.json(data);
 });
-
-// 4. MANUAL CHECK (for testing)
 app.get('/api/transactions', (req, res) => {
   res.json(TRANSACTIONS);
 });
-
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
