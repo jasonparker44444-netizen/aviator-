@@ -1,7 +1,7 @@
 {
-  "name": "digital-services-aviator",
+  "name": "digital-services",
   "version": "1.0.0",
-  "description": "DigitalServices Aviator - PayHero STK Push - Account 13469 Channel 14591",
+  "description": "DigitalServices - PayHero STK Push - Account 13469 Channel 14591",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
