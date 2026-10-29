@@ -1,47 +1,56 @@
+// DigitalServices - PayHero STK Push Server
+// Account: 13469 | Channel: 14591 | Name: digitalservices
+
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'index.html')));
-let balance=0;
-async function getToken(){
- const key=(process.env.MPESA_CONSUMER_KEY||'').trim();
- const secret=(process.env.MPESA_CONSUMER_SECRET||'').trim();
- const auth=Buffer.from(`${key}:${secret}`).toString('base64');
- const r=await axios.get('https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',{headers:{Authorization:`Basic ${auth}`}});
- console.log('TOKEN OK');
- return r.data.access_token;
-}
-app.post('/api/deposit',async(req,res)=>{
- try{
-  let {phone,amount}=req.body;
-  console.log('REQ',phone,amount);
-  phone=phone.toString().replace('+','').trim();
-  if(phone.startsWith('0'))phone='254'+phone.substring(1);
-  const token=await getToken();
-  const shortcode=(process.env.MPESA_SHORTCODE||'8033859').trim();
-  const passkey=(process.env.MPESA_PASSKEY||'').trim();
-  const ts=new Date().toISOString().replace(/[^0-9]/g,'').slice(0,14);
-  const pwd=Buffer.from(shortcode+passkey+ts).toString('base64');
-  const data={BusinessShortCode:shortcode,Password:pwd,Timestamp:ts,TransactionType:'CustomerBuyGoodsOnline',Amount:parseInt(amount),PartyA:phone,PartyB:shortcode,PhoneNumber:phone,CallBackURL:'https://aviator-1-k3kc.onrender.com/callback',AccountReference:'Aviator',TransactionDesc:'Deposit'};
-  const resp=await axios.post('https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest',data,{headers:{Authorization:`Bearer ${token}`}});
-  console.log('STK OK',JSON.stringify(resp.data));
-  res.json(resp.data);
- }catch(e){
-  console.error('STK FAIL:',JSON.stringify(e.response?.data||e.message));
-  res.status(400).json({error:e.response?.data||e.message});
- }
+app.use(express.static(path.join(__dirname, 'public')));
+
+const PAYHERO = {
+  accountId: process.env.PAYHERO_ACCOUNT_ID || 13469,
+  channelId: parseInt(process.env.PAYHERO_CHANNEL_ID) || 14591,
+  basicAuthToken: process.env.PAYHERO_BASIC_TOKEN || 'Basic SJBRcX1zFQwTU04WEI5U2JqTnc6QkhJTVk0aTl4T0IzSU5IZ1dYTFR2ZyQkd1T1ZYOUJwR01uODBtMA==',
+  baseUrl: 'https://backend.payhero.co.ke/api/v2',
+  callbackUrl: process.env.CALLBACK_URL || 'https://digital-services-k3kc.onrender.com/api/callback'
+};
+
+app.get('/', (req,res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+
+app.post('/api/deposit', async (req,res) => {
+  try {
+    let { phone, amount, user_id } = req.body;
+    let p = phone.toString().replace(/\s+/g,'');
+    if(p.startsWith('0')) p='254'+p.slice(1);
+    if(p.startsWith('+254')) p=p.slice(1);
+    
+    const payload = {
+      amount: parseInt(amount),
+      phone_number: p,
+      channel_id: PAYHERO.channelId,
+      provider: 'm-pesa',
+      external_reference: `DIGITAL_${Date.now()}`,
+      callback_url: PAYHERO.callbackUrl
+    };
+
+    const r = await axios.post(`${PAYHERO.baseUrl}/payments`, payload, {
+      headers: { Authorization: PAYHERO.basicAuthToken, 'Content-Type':'application/json' }
+    });
+
+    res.json({ success:true, message:'STK Sent to '+p, data:r.data });
+  } catch(e){
+    res.status(500).json({ success:false, error:e.response?.data || e.message });
+  }
 });
-app.post('/callback',(req,res)=>{
- console.log('CB',JSON.stringify(req.body).slice(0,400));
- const c=req.body?.Body?.stkCallback;
- if(c?.ResultCode===0){const a=c.CallbackMetadata?.Item?.find(x=>x.Name==='Amount')?.Value;if(a)balance+=parseInt(a);}
- res.json({ResultCode:0,ResultDesc:'ok'});
+
+app.post('/api/callback', (req,res) => {
+  console.log('CALLBACK:', JSON.stringify(req.body,null,2));
+  res.json({ ResultCode:0, ResultDesc:'OK' });
 });
-app.get('/api/balance',(req,res)=>res.json({balance}));
-const PORT=process.env.PORT||10000;
-app.listen(PORT,()=>console.log('Server running on '+PORT));
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, ()=> console.log(`DigitalServices running on ${PORT}`));
