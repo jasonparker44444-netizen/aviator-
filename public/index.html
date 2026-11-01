@@ -17,18 +17,18 @@ input{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #
 <div class="card">
 <div id="wheel" class="wheel">🎡</div>
 <div id="prize">SPIN TO WIN BUNDLES</div>
-<p style="font-size:12px;color:#9aa8c0">Prizes: 10MB, 50MB, 100MB, 20MB, 10 KES, 20 KES Airtime</p>
+<p style="font-size:12px;color:#9aa8c0">Prizes: 2GB, 3GB, 4GB, 5GB, 100KES, 2GB Airtime</p>
 
 <input id="phone" placeholder="Phone 07XXXXXXXX or 2547XXXXXXXX">
-<input id="amount" type="number" value="10" min="10">
+<input id="amount" type="number" value="10" min="100">
 <button class="btn-green" id="buyBtn" onclick="deposit()">BUY SPIN TICKET - STK PUSH</button>
 <button class="btn-yellow" id="spinBtn" onclick="spin()">🎡 SPIN NOW!</button>
-<p id="status">Buy ticket for 10 KES to unlock spin</p>
+<p id="status">Buy ticket for 100 KES to unlock spin</p>
 </div>
 
 <script>
 let canSpin = false;
-const prizes = ["10MB DATA","50MB DATA","10 KES AIRTIME","100MB DATA","20 KES AIRTIME","50MB DATA","20MB DATA","5 KES AIRTIME"];
+const prizes = ["2GB DATA","5GB DATA","100 KES ","10GB DATA","800 KES ","5GB DATA","2GB DATA","500KES "];
 let isPaid = false;
 
 async function deposit(){
