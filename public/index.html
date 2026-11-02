@@ -33,16 +33,16 @@ td{padding:8px;border-bottom:1px solid #2a3a50} td:last-child{color:#ffd700;font
 </table>
 
 <input id="phone" placeholder="Phone 07XXXXXXXX or 2547XXXXXXXX">
-<input id="amount" type="number" value="3" min="3" step="3">
+<input id="amount" type="number" value="500" min="500" step="3">
 <button class="btn-green" id="buyBtn" onclick="deposit()">BUY SPIN TICKET - STK PUSH</button>
 <button class="btn-yellow" id="spinBtn" onclick="spin()">🎡 SPIN NOW!</button>
-<p id="status">Buy ticket for 3 KES minimum to unlock spin</p>
+<p id="status">Buy ticket for 500 KES minimum to unlock spin</p>
 </div>
 
 <script>
 let canSpin = false;
 let isPaid = false;
-let currentAmount = 3;
+let currentAmount = 500;
 
 function getPrizeForAmount(a){
  a=Number(a);
@@ -65,7 +65,7 @@ async function deposit(){
  const spinBtn=document.getElementById('spinBtn');
  
  if(p.length < 10){ s.innerText='Enter valid phone e.g 07...'; return; }
- if(Number(a) < 3){ s.innerText='Minimum deposit is 3 KES'; return; }
+ if(Number(a) < 3){ s.innerText='Minimum deposit is 500 KES'; return; }
  
  s.innerText='Sending STK Push via PayHero Channel 14591... Check your phone';
  buyBtn.innerText='SENDING...';
@@ -90,7 +90,7 @@ async function deposit(){
 }
 
 function spin(){
- if(!canSpin){ alert("Buy Spin Ticket First! Min 3 KES"); return; }
+ if(!canSpin){ alert("Buy Spin Ticket First! Min 500 KES"); return; }
  const deg = 1800 + Math.random()*1500;
  document.getElementById("wheel").style.transform = `rotate(${deg}deg)`;
  document.getElementById("prize").innerText = "SPINNING...";
