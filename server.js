@@ -11,10 +11,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Build Basic token from Render Environment - no real key in code
+const basicAuth = 'Basic ' + Buffer.from(
+  process.env.APIUSERNAME + ':' + process.env.APIPASSWORD
+).toString('base64');
+
 const PAYHERO = {
   accountId: process.env.PAYHERO_ACCOUNT_ID || 13469,
   channelId: parseInt(process.env.PAYHERO_CHANNEL_ID) || 14591,
-  basicAuthToken: process.env.PAYHERO_BASIC_TOKEN || 'Basic SJBRcX1zFQwTU04WEI5U2JqTnc6QkhJTVk0aTl4T0IzSU5IZ1dYTFR2ZyQkd1T1ZYOUJwR01uODBtMA==',
+  basicAuthToken: basicAuth,
   baseUrl: 'https://backend.payhero.co.ke/api/v2',
   callbackUrl: process.env.CALLBACK_URL || 'https://digital-services-k3kc.onrender.com/api/callback'
 };
